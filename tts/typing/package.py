@@ -11,7 +11,7 @@ class TTSModelMultiAcc_v3():
         torch.set_grad_enabled(False)
         self.model = self.init_jit_model(model_path)
         self.symbols = symbols
-        self.device = torch.device('cpu')
+        self.device = torch.device('cuda')
         self.speaker_to_id = speaker_to_id
         self.speakers = list(speaker_to_id.keys())
         self.symb_ascii_dict = symb_ascii_dict
@@ -32,7 +32,7 @@ class TTSModelMultiAcc_v3():
 
     def init_jit_model(self, model_path: str):
         torch.set_grad_enabled(False)
-        model = torch.jit.load(model_path, map_location='cpu')
+        model = torch.jit.load(model_path, map_location='cuda')
         model.eval()
         return model
 
@@ -338,7 +338,7 @@ class TTSModelMultiAcc_v3():
                 out, out_lens = self.model(**model_kwargs)
             except RuntimeError:
                 raise Exception("Model couldn't generate your text, probably it's too long")
-        audio = out.to('cpu')[0]
+        audio = out.to('cuda')[0]
         return audio
 
     @staticmethod

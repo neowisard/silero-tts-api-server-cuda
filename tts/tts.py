@@ -15,13 +15,14 @@ if TYPE_CHECKING:
 
 # fixes import package error on Mac
 # https://github.com/snakers4/silero-models/discussions/104
-torch.backends.quantized.engine = "qnnpack"
+#torch.backends.quantized.engine = "qnnpack"
 
 MAX_INT16 = 32767
 
 print(f"Using {torch.get_num_threads()} threads. To change, set environment variable MKL_NUM_THREADS")
-
-device = torch.device("cpu")
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+#device = torch.cuda.device(0)
+print('Using device:', device)
 
 
 class TTS:
@@ -110,7 +111,7 @@ class TTS:
         sample_rate: int,
         pitch: int,
         rate: int,
-    ) -> torch.Tensor:
+    ) -> torch.Tensor.cuda:
         ssml_text = f"<speak><prosody pitch='+{pitch}%' rate='{rate}%'>{text}</prosody></speak>"
         try:
             return model.apply_tts(
