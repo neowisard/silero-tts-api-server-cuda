@@ -143,7 +143,7 @@ class TTS:
             return buffer.read()
 
     def _normalize_audio(self, tensor: torch.Tensor.cuda):
-        audio: np.ndarray = tensor.numpy() * MAX_INT16
+        audio: np.ndarray = tensor.cpu().numpy() * MAX_INT16
         return audio.astype(np.int16)
 
     def normalize_date(text: str) -> str:
