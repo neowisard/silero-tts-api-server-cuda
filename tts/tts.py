@@ -200,7 +200,7 @@ class TTS:
         tag_empty_text = re.sub('<[^>]*>', '', text)
 
         # Находим все английские слова и их позиции
-        english_words = re.finditer(r'\b[a-zA-Z.]+\b', tag_empty_text)
+        english_words = re.finditer(r'\b[a-zA-Z]+\b', tag_empty_text)
 
         # Создаем словарь для замен
         replacements = {}
