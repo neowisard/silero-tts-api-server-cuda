@@ -60,7 +60,8 @@ class TTS:
 
         text = self._delete_dashes(text)
         text = self._delete_html_brackets(text)
-        #text = self.normalize(text)
+        atext = self.normalize(text)
+        print(atext)
         tensor = self._generate_audio(model, text, speaker, sample_rate, pitch, rate)
         return self._convert_to_wav(tensor, sample_rate)
 
@@ -203,7 +204,7 @@ class TTS:
         english_words = findall(r'[a-zA-Z]+', tag_empty_text)
 
         for word in english_words:
-            result = translit(word, "ru")
+            result = translit(word, 'ru')
             text = text.replace(word, result)
 
         return text
