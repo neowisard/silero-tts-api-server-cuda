@@ -87,7 +87,7 @@ class TTS:
     def _delete_dashes(self, text: str) -> str:
         # This fixes the problem:
         # https://github.com/twirapp/silero-tts-api-server/issues/8
-        return text.replace("-", "").replace("‑", "").replace(".", " <break time='0.5s'/>")
+        return text.replace("-", "").replace("‑", "")
 
     def _delete_html_brackets(self, text: str) -> str:
         # Safeguarding against pitch and rate modifications with HTML tags in text.
