@@ -194,13 +194,25 @@ class TTS:
 
         return text  # Возвращаем обработанный текст
 
-    def _translit_text(self,text: str) -> str:
-        tag_empty_text = re.sub('<[^>]*>', '', text)
-        english_words = re.findall(r'\b[a-zA-Z]+\b', tag_empty_text, re.MULTILINE)
 
-        for word in english_words:
-            result = translit(word, 'ru')
-            text = text.replace(word, result)
+    def _translit_text(self, text: str) -> str:
+        # Удаляем все теги HTML
+        tag_empty_text = re.sub('<[^>]*>', '', text)
+
+        # Находим все английские слова и их позиции
+        english_words = re.finditer(r'\b[a-zA-Z]+\b', tag_empty_text)
+
+        # Создаем словарь для замен
+        replacements = {}
+
+        for match in english_words:
+            word = match.group()
+            transliterated_word = translit(word, 'ru')
+            replacements[match.start(), match.end()] = transliterated_word
+
+        # Выполняем замены в обратном порядке, чтобы не сбить позиции
+        for start, end in sorted(replacements.keys(), reverse=True):
+            text = text[:start] + replacements[start, end] + text[end:]
 
         return text
 
