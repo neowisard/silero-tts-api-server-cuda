@@ -46,14 +46,11 @@ def generate(
         )
 
     try:
-        audio = tts.generate(model, input, voice, sample_rate, pitch, rate)
-        sample_rate=24000
-        pitch=50
-        rate=70
+        audio = tts.generate(text, speaker, sample_rate, pitch, rate)
     except NotFoundModelException:
-        raise NotFoundSpeakerHTTPException({"voice": speaker})
+        raise NotFoundSpeakerHTTPException({"speaker": speaker})
     except NotCorrectTextException:
-        raise NotCorrectTextHTTPException({"input": text})
+        raise NotCorrectTextHTTPException({"text": text})
     except TextTooLongException:
         raise TextTooLongHTTPException(
             {"text": text, "length": len(text), "max_length": text_length_limit}
