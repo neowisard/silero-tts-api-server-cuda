@@ -151,7 +151,7 @@ class TTS:
     def normalize_time(text: str) -> str:
         return text
 
-    def _normalize_number(text: str) -> str:
+    def _normalize_number(self,text: str) -> str:
         number_strings = findall(
             r'(?<![a-zA-Z\d])\d+(?:\.\d+)?(?:(?:\s|\w)*?<d>.*?</d>)*(?!(?:[a-zA-Z\d\"\']|\s)*\'?/?>)',
             text)
@@ -193,18 +193,18 @@ class TTS:
                     number = ' '.join(numbers)
 
             inflected_words.insert(0, number)
-            text = text.replace(number_string, ' '.join(inflected_words))
+            res= text.replace(number_string, ' '.join(inflected_words))
 
-        return text
+        return res
 
-    def _translit_text(text: str) -> str:
+    def _translit_text(self,text: str) -> str:
         tag_empty_text = sub('<[^>]*>', '', text)
         english_words = findall(r'[a-zA-Z]+', tag_empty_text)
 
         for word in english_words:
             result = translit(word, 'ru')
-            text = text.replace(word, result)
+            res = text.replace(word, result)
 
-        return text
+        return res
 
 tts = TTS()
