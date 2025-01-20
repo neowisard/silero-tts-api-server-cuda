@@ -2,6 +2,11 @@ from typing import TYPE_CHECKING
 from pathlib import Path
 from io import BytesIO
 import wave
+from re import findall, sub
+from pymorphy2 import MorphAnalyzer
+from transliterate import translit
+from num2words import num2words
+
 
 import torch
 from torch.package import PackageImporter
@@ -12,6 +17,45 @@ from tts.exceptions import *
 if TYPE_CHECKING:
     from .typing.package import TTSModelMultiAcc_v3
 
+NUMBERS = """0,ноль,нулевой
+1,один,первый
+2,два,второй
+3,три,третий
+4,четыре,четвертый
+5,пять,пятый
+6,шесть,шестой
+7,семь,седьмой
+8,восемь,восьмой
+9,девять,девятый
+10,десять,десятый
+11,одинадцать,одинадцатый
+12,двенадцать,двенадцатый
+13,тринадцать,тринадцатый
+14,четырнадцать,четырнадцатый
+15,пятнадцать,пятнадцатый
+16,шестнадцать,шестнадцатый
+17,семнадцать,семнадцатый
+18,восемнадцать,восемнадцатый
+19,девятнадцать,девятнадцатый
+20,двадцать,двадцатый
+30,тридцать,тридцатый
+40,сорок,сороковой
+50,пятьдесят,пятидесятый
+60,шестьдесят,шестидесятый
+70,семьдесят,семидесятый
+80,восемьдесят,восьмидесятый
+90,девяносто,девяностый
+100,сто,сотый
+200,двести,двухсотый
+300,триста,трехсотый
+400,четыреста,четырехсотый
+500,пятьсот,пятисотый
+600,шестьсот,шестисотый
+700,семьсот,семисотый
+800,восемьсот,восьмисотый
+900,девятьсот,девятисотый
+1000,тысяча,тысячный
+1000000,миллион,миллионный"""
 
 # fixes import package error on Mac
 # https://github.com/snakers4/silero-models/discussions/104
@@ -55,7 +99,7 @@ class TTS:
 
         text = self._delete_dashes(text)
         text = self._delete_html_brackets(text)
-
+        text = self.normalize(text)
         tensor = self._generate_audio(model, text, speaker, sample_rate, pitch, rate)
         return self._convert_to_wav(tensor, sample_rate)
 
@@ -139,5 +183,75 @@ class TTS:
         audio: np.ndarray = tensor.numpy() * MAX_INT16
         return audio.astype(np.int16)
 
+    morph = MorphAnalyzer(lang=settings.language)
+
+    def normalize_date(text: str) -> str:
+        return text
+
+    def normalize_time(text: str) -> str:
+        return text
+
+    def normalize_number(text: str) -> str:
+        number_strings = findall(
+            r'(?<![a-zA-Z\d])\d+(?:\.\d+)?(?:(?:\s|\w)*?<d>.*?</d>)*(?!(?:[a-zA-Z\d\"\']|\s)*\'?/?>)',
+            text)
+
+        for number_string in number_strings:
+            number_data = number_string.split(' ')
+
+            number = num2words(number_data[0], lang='ru')
+            number_gender = None
+
+            inflected_words = []
+
+            for i in range(1, len(number_data)):
+                if '<d>' not in number_data[i]:
+                    inflected_words.append(number_data[i])
+                    continue
+
+                word_to_declension = morph.parse(number_data[i][3:-4])[0]
+
+                if not number_gender:
+                    number_gender = word_to_declension.tag.gender
+
+                inflected_word = word_to_declension.make_agree_with_number(float(number_data[0]))
+
+                if inflected_word:
+                    word_to_declension = inflected_word
+
+                inflected_words.append(word_to_declension.word)
+
+            last_number_word = morph.parse(number.split(' ')[-1])[0]
+
+            if number_gender:
+                inclined_number = last_number_word.inflect({number_gender})
+
+                if inclined_number:
+                    numbers = number.split(' ')
+                    numbers.pop()
+                    numbers.append(inclined_number.word)
+                    number = ' '.join(numbers)
+
+            inflected_words.insert(0, number)
+            text = text.replace(number_string, ' '.join(inflected_words))
+
+        return text
+
+    def translit_text(text: str) -> str:
+        tag_empty_text = sub('<[^>]*>', '', text)
+        english_words = findall(r'[a-zA-Z]+', tag_empty_text)
+
+        for word in english_words:
+            result = translit(word, "ru")
+            text = text.replace(word, result)
+
+        return text
+
+    def normalize(text: str) -> str:
+        text = " ".join(text.split())
+        text = normalize_number(text)
+        text = translit_text(text)
+
+        return text
 
 tts = TTS()
