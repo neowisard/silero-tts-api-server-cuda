@@ -24,7 +24,7 @@ text_length_limit = min(
 )
 
 
-@get(
+@post(
     "/generate",
     summary="Generate WAV audio from text",
     media_type="audio/wav",
@@ -46,11 +46,14 @@ def generate(
         )
 
     try:
-        audio = tts.generate(text, speaker, sample_rate, pitch, rate)
+        audio = tts.generate(model, input, voice, sample_rate, pitch, rate)
+        sample_rate=24000
+        pitch=50
+        rate=70
     except NotFoundModelException:
-        raise NotFoundSpeakerHTTPException({"speaker": speaker})
+        raise NotFoundSpeakerHTTPException({"voice": speaker})
     except NotCorrectTextException:
-        raise NotCorrectTextHTTPException({"text": text})
+        raise NotCorrectTextHTTPException({"input": text})
     except TextTooLongException:
         raise TextTooLongHTTPException(
             {"text": text, "length": len(text), "max_length": text_length_limit}
