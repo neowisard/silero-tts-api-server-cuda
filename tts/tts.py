@@ -210,7 +210,7 @@ class TTS:
         return text
 
     def normalize(text: str) -> str:
-        text = " ".join(text.split())
+        #text = " ".join(text.split())
         text = normalize_number(text)
         text = translit_text(text)
 
