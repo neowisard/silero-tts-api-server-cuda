@@ -61,8 +61,7 @@ class TTS:
         text = self._normalize_number(text)
         text = self._translit_text(text)
         text = self._delete_dashes(text)
-
-        #print('Final text:', text)
+        print('Final text:', text)
         tensor = self._generate_audio(model, text, speaker, sample_rate, pitch, rate)
         return self._convert_to_wav(tensor, sample_rate)
 
