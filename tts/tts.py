@@ -57,11 +57,11 @@ class TTS:
 
         pitch = self._interpolate_pitch(pitch)
         rate = self._interpolate_rate(rate)
-
-        text = self._delete_dashes(text)
         text = self._delete_html_brackets(text)
         text = self._normalize_number(text)
         text = self._translit_text(text)
+        text = self._delete_dashes(text)
+
         #print('Final text:', text)
         tensor = self._generate_audio(model, text, speaker, sample_rate, pitch, rate)
         return self._convert_to_wav(tensor, sample_rate)
@@ -88,7 +88,7 @@ class TTS:
     def _delete_dashes(self, text: str) -> str:
         # This fixes the problem:
         # https://github.com/twirapp/silero-tts-api-server/issues/8
-        return text.replace("-", "").replace("‑", "")
+        return text.replace("-", "").replace("‑", "").replace(".", " <break time='0.5s'/>")
 
     def _delete_html_brackets(self, text: str) -> str:
         # Safeguarding against pitch and rate modifications with HTML tags in text.
@@ -200,7 +200,7 @@ class TTS:
         tag_empty_text = re.sub('<[^>]*>', '', text)
 
         # Находим все английские слова и их позиции
-        english_words = re.finditer(r'\b[a-zA-Z]+\b', tag_empty_text)
+        english_words = re.finditer(r'\b[a-zA-Z.]+\b', tag_empty_text)
 
         # Создаем словарь для замен
         replacements = {}
