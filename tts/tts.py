@@ -60,7 +60,7 @@ class TTS:
 
         text = self._delete_dashes(text)
         text = self._delete_html_brackets(text)
-        text = self.normalize(text)
+        #text = self.normalize(text)
         tensor = self._generate_audio(model, text, speaker, sample_rate, pitch, rate)
         return self._convert_to_wav(tensor, sample_rate)
 
