@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 # fixes import package error on Mac
 # https://github.com/snakers4/silero-models/discussions/104
 #torch.backends.quantized.engine = "qnnpack"
-
+morph = MorphAnalyzer(lang='ru')
 MAX_INT16 = 32767
 
 print(f"Using {torch.get_num_threads()} threads. To change, set environment variable MKL_NUM_THREADS")
@@ -60,8 +60,8 @@ class TTS:
 
         text = self._delete_dashes(text)
         text = self._delete_html_brackets(text)
-        atext = self.normalize(text)
-        print(atext)
+        text = self._normalize_number(text)
+        text = self._translit_text(text)
         tensor = self._generate_audio(model, text, speaker, sample_rate, pitch, rate)
         return self._convert_to_wav(tensor, sample_rate)
 
@@ -145,15 +145,13 @@ class TTS:
         audio: np.ndarray = tensor.numpy() * MAX_INT16
         return audio.astype(np.int16)
 
-    morph = MorphAnalyzer(lang='ru')
-
     def normalize_date(text: str) -> str:
         return text
 
     def normalize_time(text: str) -> str:
         return text
 
-    def normalize_number(text: str) -> str:
+    def _normalize_number(text: str) -> str:
         number_strings = findall(
             r'(?<![a-zA-Z\d])\d+(?:\.\d+)?(?:(?:\s|\w)*?<d>.*?</d>)*(?!(?:[a-zA-Z\d\"\']|\s)*\'?/?>)',
             text)
@@ -199,20 +197,13 @@ class TTS:
 
         return text
 
-    def translit_text(text: str) -> str:
+    def _translit_text(text: str) -> str:
         tag_empty_text = sub('<[^>]*>', '', text)
         english_words = findall(r'[a-zA-Z]+', tag_empty_text)
 
         for word in english_words:
             result = translit(word, 'ru')
             text = text.replace(word, result)
-
-        return text
-
-    def normalize(text: str) -> str:
-        #text = " ".join(text.split())
-        text = normalize_number(text)
-        text = translit_text(text)
 
         return text
 
