@@ -153,6 +153,7 @@ class TTS:
         return text
 
     def _normalize_number(self, text: str) -> str:
+        # Ищем все числа в тексте, которые могут быть с десятичной точкой и могут иметь прилагательные после них
         number_strings = re.findall(
             r'(?<![a-zA-Z\d])\d+(?:\.\d+)?(?:(?:\s|\w)*?<d>.*?</d>)*(?!(?:[a-zA-Z\d\"\']|\s)*\'?/?>)',
             text
@@ -160,6 +161,7 @@ class TTS:
 
         for number_string in number_strings:
             number_data = number_string.split(' ')
+            # Преобразуем число в словесную форму на русском языке
             number = num2words(number_data[0], lang='ru')
             number_gender = None
             inflected_words = []
@@ -169,32 +171,37 @@ class TTS:
                     inflected_words.append(word)
                     continue
 
+                # Парсим слово для получения информации о грамматических характеристиках
                 word_to_declension = morph.parse(word[3:-4])[0]
                 if not number_gender:
                     number_gender = word_to_declension.tag.gender
 
+                # Согласуем слово с числом
                 inflected_word = word_to_declension.make_agree_with_number(float(number_data[0]))
                 inflected_words.append(inflected_word.word if inflected_word else word_to_declension.word)
 
+            # Получаем последнее слово числового выражения для согласования с родом
             last_number_word = morph.parse(number.split(' ')[-1])[0]
             if number_gender:
+                # Согласуем последнее слово числового выражения с родом
                 inclined_number = last_number_word.inflect({number_gender})
                 if inclined_number:
                     number = ' '.join(number.split(' ')[:-1] + [inclined_number.word])
 
             inflected_words.insert(0, number)
-            res = text.replace(number_string, ' '.join(inflected_words))
+            # Заменяем исходное числовое выражение в тексте на согласованное
+            text = text.replace(number_string, ' '.join(inflected_words))
 
-        return res
+        return text  # Возвращаем обработанный текст
 
     def _translit_text(self,text: str) -> str:
-        tag_empty_text = sub('<[^>]*>', '', text)
-        english_words = findall(r'[a-zA-Z]+', tag_empty_text)
+        tag_empty_text = re.sub('<[^>]*>', '', text)
+        english_words = re.findall(r'\b[a-zA-Z]+\b', tag_empty_text, re.MULTILINE)
 
         for word in english_words:
             result = translit(word, 'ru')
-            res = text.replace(word, result)
+            text = text.replace(word, result)
 
-        return res
+        return text
 
 tts = TTS()
