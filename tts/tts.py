@@ -183,7 +183,7 @@ class TTS:
         audio: np.ndarray = tensor.numpy() * MAX_INT16
         return audio.astype(np.int16)
 
-    morph = MorphAnalyzer(lang=settings.language)
+    morph = MorphAnalyzer(lang='ru')
 
     def normalize_date(text: str) -> str:
         return text
