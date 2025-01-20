@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 from pathlib import Path
 from io import BytesIO
 import wave
-from re import findall, sub
+import re
 from pymorphy3 import MorphAnalyzer
 from transliterate import translit
 from num2words import num2words
@@ -152,49 +152,38 @@ class TTS:
     def normalize_time(text: str) -> str:
         return text
 
-    def _normalize_number(self,text: str) -> str:
-        number_strings = findall(
+    def _normalize_number(self, text: str) -> str:
+        number_strings = re.findall(
             r'(?<![a-zA-Z\d])\d+(?:\.\d+)?(?:(?:\s|\w)*?<d>.*?</d>)*(?!(?:[a-zA-Z\d\"\']|\s)*\'?/?>)',
-            text)
+            text
+        )
 
         for number_string in number_strings:
             number_data = number_string.split(' ')
-
             number = num2words(number_data[0], lang='ru')
             number_gender = None
-
             inflected_words = []
 
-            for i in range(1, len(number_data)):
-                if '<d>' not in number_data[i]:
-                    inflected_words.append(number_data[i])
+            for word in number_data[1:]:
+                if '<d>' not in word:
+                    inflected_words.append(word)
                     continue
 
-                word_to_declension = morph.parse(number_data[i][3:-4])[0]
-
+                word_to_declension = morph.parse(word[3:-4])[0]
                 if not number_gender:
                     number_gender = word_to_declension.tag.gender
 
                 inflected_word = word_to_declension.make_agree_with_number(float(number_data[0]))
-
-                if inflected_word:
-                    word_to_declension = inflected_word
-
-                inflected_words.append(word_to_declension.word)
+                inflected_words.append(inflected_word.word if inflected_word else word_to_declension.word)
 
             last_number_word = morph.parse(number.split(' ')[-1])[0]
-
             if number_gender:
                 inclined_number = last_number_word.inflect({number_gender})
-
                 if inclined_number:
-                    numbers = number.split(' ')
-                    numbers.pop()
-                    numbers.append(inclined_number.word)
-                    number = ' '.join(numbers)
+                    number = ' '.join(number.split(' ')[:-1] + [inclined_number.word])
 
             inflected_words.insert(0, number)
-            res= text.replace(number_string, ' '.join(inflected_words))
+            res = text.replace(number_string, ' '.join(inflected_words))
 
         return res
 
