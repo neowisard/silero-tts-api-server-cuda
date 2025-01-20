@@ -131,7 +131,7 @@ class TTS:
                 raise TextTooLongException(text)
             raise
 
-    def _convert_to_wav(self, tensor: torch.Tensor, sample_rate: int) -> bytes:
+    def _convert_to_wav(self, tensor: torch.Tensor.cuda, sample_rate: int) -> bytes:
         audio = self._normalize_audio(tensor)
         with BytesIO() as buffer, wave.open(buffer, "wb") as wav:
             wav.setnchannels(1)  # mono
@@ -142,7 +142,7 @@ class TTS:
             buffer.seek(0)
             return buffer.read()
 
-    def _normalize_audio(self, tensor: torch.Tensor):
+    def _normalize_audio(self, tensor: torch.Tensor.cuda):
         audio: np.ndarray = tensor.numpy() * MAX_INT16
         return audio.astype(np.int16)
 
