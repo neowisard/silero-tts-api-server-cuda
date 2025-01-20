@@ -2,7 +2,7 @@ from os import environ
 from typing import Annotated
 
 from dotenv import load_dotenv
-from litestar import Litestar, get, Response
+from litestar import Litestar, get, post, Response
 from litestar.response import Redirect
 from litestar.openapi import OpenAPIConfig
 from litestar.config.response_cache import CACHE_FOREVER
@@ -24,7 +24,7 @@ text_length_limit = min(
 )
 
 
-@get(
+@post(
     "/generate",
     summary="Generate WAV audio from text",
     media_type="audio/wav",
