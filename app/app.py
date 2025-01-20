@@ -24,7 +24,7 @@ text_length_limit = min(
 )
 
 
-@post(
+@get(
     "/generate",
     summary="Generate WAV audio from text",
     media_type="audio/wav",
