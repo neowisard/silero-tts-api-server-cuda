@@ -40,8 +40,8 @@ def generate(
     ],
 ) -> Response:
     text = data.get("text", "")
-    speaker = data.get("speaker", "")
-    sample_rate = data.get("sample_rate", 48_000)
+    speaker = data.get("speaker", "xenia")
+    sample_rate = data.get("sample_rate", 24_000)
     pitch = data.get("pitch", 50)
     rate = data.get("rate", 50)
 
