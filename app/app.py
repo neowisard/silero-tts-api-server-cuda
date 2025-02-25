@@ -2,7 +2,7 @@ from os import environ
 from typing import Annotated
 
 from dotenv import load_dotenv
-from litestar import Litestar, post, Response
+from litestar import Litestar, get, post, Response
 from litestar.response import Redirect
 from litestar.openapi import OpenAPIConfig
 from litestar.config.response_cache import CACHE_FOREVER
