@@ -24,13 +24,13 @@ text_length_limit = min(
 
 
 @post(
-    "/generate",
+    "/tts_to_audio",
     summary="Generate WAV audio from text",
     media_type="audio/wav",
     sync_to_thread=True,
     raises=genetate_exceptions,
 )
-def generate(
+def tts_to_audio(
     data: Annotated[
         dict,
         Body(
@@ -82,7 +82,7 @@ async def docs() -> Redirect:
 
 
 app = Litestar(
-    [generate, speakers, docs],
+    [tts_to_audio, speakers, docs],
     openapi_config=OpenAPIConfig(
         title="Silero TTS API", version="1.0.0", root_schema_site="swagger"
     ),
