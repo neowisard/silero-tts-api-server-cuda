@@ -7,7 +7,6 @@ from pymorphy3 import MorphAnalyzer
 from transliterate import translit
 from num2words import num2words
 
-
 import torch
 from torch.package import PackageImporter
 import numpy as np
@@ -15,18 +14,16 @@ import numpy as np
 from tts.exceptions import *
 
 if TYPE_CHECKING:
-    from .typing.package import TTSModelMultiAcc_v3
-
+    from .typing.package import TTSModelMultiAcc_v4  # Обновленный импорт для версии 4
 
 # fixes import package error on Mac
 # https://github.com/snakers4/silero-models/discussions/104
-#torch.backends.quantized.engine = "qnnpack"
+# torch.backends.quantized.engine = "qnnpack"
 morph = MorphAnalyzer(lang='ru')
 MAX_INT16 = 32767
 
 print(f"Using {torch.get_num_threads()} threads. To change, set environment variable MKL_NUM_THREADS")
-#device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-device = torch.cuda.device(2)
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print('Using device:', device)
 
 
@@ -34,9 +31,9 @@ class TTS:
     VALID_SAMPLE_RATES = (8000, 24000, 48000)
 
     def __init__(self):
-        self.models: dict[str, "TTSModelMultiAcc_v3"] = {}
+        self.models: dict[str, "TTSModelMultiAcc_v4"] = {}  # Обновленный тип для версии 4
         self.speakers: dict[str, list[str]] = {}
-        self.model_by_speaker: dict[str, "TTSModelMultiAcc_v3"] = {}
+        self.model_by_speaker: dict[str, "TTSModelMultiAcc_v4"] = {}  # Обновленный тип для версии 4
 
         for model_path in Path("models").glob("*.pt"):
             self._load_model(model_path)
@@ -65,18 +62,17 @@ class TTS:
         tensor = self._generate_audio(model, text, speaker, sample_rate, pitch, rate)
         return self._convert_to_wav(tensor, sample_rate)
 
-
     def _load_model(self, model_path: Path):
         package = PackageImporter(model_path)
-        model: "TTSModelMultiAcc_v3" = package.load_pickle("tts_models", "model")
-        model.to(device)  # Явно загружаем модель на GPU
+        model: "TTSModelMultiAcc_v4" = package.load_pickle("tts_models", "model")  # Обновленный тип для версии 4
+        model.to(device, non_blocking=True)  # Явно загружаем модель на GPU
 
         language = model_path.stem[3:]  # remove prefix "v3_" or "v4_"
         self.models[language] = model
 
         self._load_speakers(model, language)
 
-    def _load_speakers(self, model: "TTSModelMultiAcc_v3", language: str):
+    def _load_speakers(self, model: "TTSModelMultiAcc_v4", language: str):  # Обновленный тип для версии 4
         if "random" in model.speakers:
             model.speakers.remove("random")
 
@@ -109,10 +105,9 @@ class TTS:
         OFFSET = 50
         return rate + OFFSET
 
-
     def _generate_audio(
         self,
-        model: "TTSModelMultiAcc_v3",
+        model: "TTSModelMultiAcc_v4",
         text: str,
         speaker: str,
         sample_rate: int,
@@ -125,7 +120,7 @@ class TTS:
             tensor = model.apply_tts(
                 ssml_text=ssml_text, speaker=speaker, sample_rate=sample_rate
             )
-            tensor = tensor.to(device)  # Явно загружаем тензор на GPU
+            tensor = tensor.to(device, non_blocking=True)  # Явно загружаем тензор на GPU
             return tensor
         except ValueError:
             raise NotCorrectTextException(text)
@@ -134,8 +129,7 @@ class TTS:
                 raise TextTooLongException(text)
             raise
 
-
-    def _convert_to_wav(self, tensor: torch.Tensor.cuda, sample_rate: int) -> bytes:
+    def _convert_to_wav(self, tensor: torch.Tensor, sample_rate: int) -> bytes:
         audio = self._normalize_audio(tensor)
         with BytesIO() as buffer, wave.open(buffer, "wb") as wav:
             wav.setnchannels(1)  # mono
@@ -146,7 +140,7 @@ class TTS:
             buffer.seek(0)
             return buffer.read()
 
-    def _normalize_audio(self, tensor: torch.Tensor.cuda):
+    def _normalize_audio(self, tensor: torch.Tensor):
         audio: np.ndarray = tensor.cpu().numpy() * MAX_INT16
         return audio.astype(np.int16)
 
