@@ -25,8 +25,8 @@ morph = MorphAnalyzer(lang='ru')
 MAX_INT16 = 32767
 
 print(f"Using {torch.get_num_threads()} threads. To change, set environment variable MKL_NUM_THREADS")
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-#device = torch.cuda.device(0)
+#device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+device = torch.cuda.device(2)
 print('Using device:', device)
 
 
@@ -120,8 +120,7 @@ class TTS:
         rate: int,
     ) -> torch.Tensor:
         ssml_text = f"<speak><prosody pitch='+{pitch}%' rate='{rate}%'>{text}</prosody></speak>"
-        print(f"Model device: {next(model.parameters()).device}")
-        print(f"Tensor device: {tensor.device}")
+
         try:
             tensor = model.apply_tts(
                 ssml_text=ssml_text, speaker=speaker, sample_rate=sample_rate
