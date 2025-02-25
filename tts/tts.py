@@ -65,7 +65,7 @@ class TTS:
     def _load_model(self, model_path: Path):
         package = PackageImporter(model_path)
         model: "TTSModelMultiAcc_v4" = package.load_pickle("tts_models", "model")  # Обновленный тип для версии 4
-        model.to(device, non_blocking=True)  # Явно загружаем модель на GPU
+        model.to(device)  # Явно загружаем модель на GPU
 
         language = model_path.stem[3:]  # remove prefix "v3_" or "v4_"
         self.models[language] = model
