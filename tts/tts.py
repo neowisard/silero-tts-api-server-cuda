@@ -193,7 +193,6 @@ class TTS:
 
         return text  # Возвращаем обработанный текст
 
-
     def _translit_text(self, text: str) -> str:
         # Удаляем все теги HTML
         tag_empty_text = re.sub('<[^>]*>', '', text)

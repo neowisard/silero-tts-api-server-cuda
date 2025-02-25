@@ -2,18 +2,17 @@ from os import environ
 from typing import Annotated
 
 from dotenv import load_dotenv
-from litestar import Litestar, get, post, Response
+from litestar import Litestar, post, Response
 from litestar.response import Redirect
 from litestar.openapi import OpenAPIConfig
 from litestar.config.response_cache import CACHE_FOREVER
 from litestar.config.cors import CORSConfig
-from litestar.params import Parameter
+from litestar.params import Body
 
 from tts.tts import tts
 from tts.exceptions import *
 from app.openapi_examples import *
 from app.http_exceptions import *
-
 
 load_dotenv()
 
@@ -24,7 +23,7 @@ text_length_limit = min(
 )
 
 
-@get(
+@post(
     "/generate",
     summary="Generate WAV audio from text",
     media_type="audio/wav",
@@ -32,14 +31,20 @@ text_length_limit = min(
     raises=genetate_exceptions,
 )
 def generate(
-    text: Annotated[str, Parameter(examples=text_examples)],
-    speaker: Annotated[str, Parameter(examples=speaker_examples)],
-    sample_rate: Annotated[
-        int, Parameter(examples=sample_rate_examples, default=48_000)
+    data: Annotated[
+        dict,
+        Body(
+            examples=text_examples,
+            description="Data containing text, speaker, sample_rate, pitch, and rate",
+        ),
     ],
-    pitch: Annotated[int, Parameter(ge=0, le=100, default=50)],
-    rate: Annotated[int, Parameter(ge=0, le=100, default=50)],
 ) -> Response:
+    text = data.get("text", "")
+    speaker = data.get("speaker", "")
+    sample_rate = data.get("sample_rate", 48_000)
+    pitch = data.get("pitch", 50)
+    rate = data.get("rate", 50)
+
     if len(text) > text_length_limit:
         raise TextTooLongHTTPException(
             {"text": text, "length": len(text), "max_length": text_length_limit}
