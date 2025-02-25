@@ -65,11 +65,11 @@ class TTS:
         tensor = self._generate_audio(model, text, speaker, sample_rate, pitch, rate)
         return self._convert_to_wav(tensor, sample_rate)
 
+
     def _load_model(self, model_path: Path):
         package = PackageImporter(model_path)
         model: "TTSModelMultiAcc_v3" = package.load_pickle("tts_models", "model")
-        if model.device != device:
-            model.to(device)
+        model.to(device)  # Явно загружаем модель на GPU
 
         language = model_path.stem[3:]  # remove prefix "v3_" or "v4_"
         self.models[language] = model
@@ -109,6 +109,7 @@ class TTS:
         OFFSET = 50
         return rate + OFFSET
 
+
     def _generate_audio(
         self,
         model: "TTSModelMultiAcc_v3",
@@ -117,18 +118,21 @@ class TTS:
         sample_rate: int,
         pitch: int,
         rate: int,
-    ) -> torch.Tensor.cuda:
+    ) -> torch.Tensor:
         ssml_text = f"<speak><prosody pitch='+{pitch}%' rate='{rate}%'>{text}</prosody></speak>"
         try:
-            return model.apply_tts(
+            tensor = model.apply_tts(
                 ssml_text=ssml_text, speaker=speaker, sample_rate=sample_rate
             )
+            tensor = tensor.to(device)  # Явно загружаем тензор на GPU
+            return tensor
         except ValueError:
             raise NotCorrectTextException(text)
         except Exception as error:
             if str(error) == "Model couldn't generate your text, probably it's too long":
                 raise TextTooLongException(text)
             raise
+
 
     def _convert_to_wav(self, tensor: torch.Tensor.cuda, sample_rate: int) -> bytes:
         audio = self._normalize_audio(tensor)
