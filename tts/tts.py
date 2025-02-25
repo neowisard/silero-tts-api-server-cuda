@@ -120,6 +120,8 @@ class TTS:
         rate: int,
     ) -> torch.Tensor:
         ssml_text = f"<speak><prosody pitch='+{pitch}%' rate='{rate}%'>{text}</prosody></speak>"
+        print(f"Model device: {next(model.parameters()).device}")
+        print(f"Tensor device: {tensor.device}")
         try:
             tensor = model.apply_tts(
                 ssml_text=ssml_text, speaker=speaker, sample_rate=sample_rate
